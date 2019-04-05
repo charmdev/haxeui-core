@@ -1,5 +1,8 @@
 package haxe.ui.components;
 
+import haxe.ui.validation.InvalidationFlags;
+import openfl.display.DisplayObject;
+import openfl.display.Graphics;
 import haxe.ui.containers.ListView;
 import haxe.ui.core.BasicItemRenderer;
 import haxe.ui.core.Behaviour;
@@ -176,11 +179,16 @@ class DropDown extends Button implements IDataComponent {
     }
 
     private function onItemChange(event:UIEvent) {
+        trace('on change');
         if (_listview.selectedItem.data.value != null) {
             selectedIndex = _dataSource.indexOf(_listview.selectedItem.data);
         }
-        selected = false;
-        onMouseClick(null);
+        if (!explicitSelection)
+        {
+            selected = false;
+            onMouseClick(null);
+        }
+        explicitSelection = false;
         dispatch(new UIEvent(UIEvent.CHANGE));
     }
 
@@ -194,6 +202,8 @@ class DropDown extends Button implements IDataComponent {
         selected = !selected;
         onMouseClick(null);
     }
+
+    private var explicitSelection:Bool = false;
 
     private function showList() {
         if (_listview == null) {
@@ -226,6 +236,9 @@ class DropDown extends Button implements IDataComponent {
             _listview.width = _listWidth;
         }
 
+        _listview.selectedIndex = _selectedIndex;
+        explicitSelection = true;
+
         var listHeight = _listHeight;
         if (_listHeight == null) {
             var n:Int = _listSize;
@@ -253,6 +266,16 @@ class DropDown extends Button implements IDataComponent {
             Screen.instance.removeComponent(_listview);
         }
         Screen.instance.unregisterEvent(MouseEvent.MOUSE_DOWN, onScreenMouseDown);
+    }
+
+    override public function set_visible(val:Bool):Bool
+    {
+        if (visible && val == false)
+        {
+            hideList();
+            selected = false;
+        }
+        return super.set_visible(val);
     }
 
     //***********************************************************************************************************
